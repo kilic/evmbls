@@ -2,7 +2,7 @@
 
 [BLS Signature](https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html) verification and ECC utility contracts.
 
-Signature verificatio nscheme implemented on BN254 elliptic curve. Currently only public-key-on-G2 setup is available.
+Signature verification scheme implemented on BN254 elliptic curve. Currently only public-key-on-G2 setup is available.
 
 # Roadmap
 
@@ -13,5 +13,5 @@ Signature verificatio nscheme implemented on BN254 elliptic curve. Currently onl
 - [x] Map to curve: try and increment G1
 - [ ] Map to curve: try and increment, using helpers to get rid of modExp call
 - [ ] Map to curve: try and increment G2
-- [ ] Map to curve: [Fouque Tibouchi](https://www.di.ens.fr/~fouque/pub/latincrypt12.pdf)
+- [x] Map to curve: [Fouque Tibouchi](https://www.di.ens.fr/~fouque/pub/latincrypt12.pdf)
 - [ ] EIP-2537 support
