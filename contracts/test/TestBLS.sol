@@ -23,6 +23,10 @@ contract TestBLS {
     return BLS.mapToPointTI(e);
   }
 
+  function mapToPointFT(bytes32 e) external view returns (uint256[2] memory p) {
+    return BLS.mapToPointFT(e);
+  }
+
   function isOnCurveG1Compressed(uint256 point) external view returns (bool) {
     return BLS.isOnCurveG1(point & BLS.FIELD_MASK);
   }

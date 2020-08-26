@@ -11,12 +11,25 @@ contract('BLS', (accounts) => {
     await mcl.init();
     bls = await TestBLS.new();
   });
+
+  it('map to point, ft', async function () {
+    mcl.setMappingMode(mcl.MAPPING_MODE_FT);
+    for (let i = 0; i < 100; i++) {
+      const data = web3.utils.randomHex(12);
+      const e = web3.utils.soliditySha3(data)!;
+      let expect = mcl.g1ToHex(mcl.mapToPoint(e));
+      let res = await bls.mapToPointFT(e);
+      assert.equal(expect[0], bnToHex(res[0]), 'e ' + e);
+      assert.equal(expect[1], bnToHex(res[1]), 'e ' + e);
+    }
+  });
+
   it('map to point, ti', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_TI);
     for (let i = 0; i < 20; i++) {
       const data = web3.utils.randomHex(12);
       const e = web3.utils.soliditySha3(data)!;
-      let expect = mcl.g1ToHex(mcl.mapToPointTI(e));
+      let expect = mcl.g1ToHex(mcl.mapToPoint(e));
       let res = await bls.mapToPointTI(e);
       assert.equal(expect[0], bnToHex(res[0]));
       assert.equal(expect[1], bnToHex(res[1]));

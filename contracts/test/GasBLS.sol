@@ -29,6 +29,12 @@ contract GasBLS {
     return operationGasCost - gasleft();
   }
 
+  function mapToPointFTGasCost(bytes32 e) external returns (uint256 operationGasCost) {
+    operationGasCost = gasleft();
+    BLS.mapToPointFT(e);
+    return operationGasCost - gasleft();
+  }
+
   function isOnCurveG1CompressedGasCost(uint256 point) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
     BLS.isOnCurveG1(point);

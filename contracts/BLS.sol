@@ -10,6 +10,11 @@ library BLS {
   uint256 constant nG2y1 = 17805874995975841540914202342111839520379459829704422454583296818431106115052;
   uint256 constant nG2y0 = 13392588948715843804641432497768002650278120570034223513918757245338268106653;
 
+  // sqrt(-3)
+  uint256 constant z0 = 0x0000000000000000b3c4d79d41a91759a9e4c7e359b6b89eaec68e62effffffd;
+  // (sqrt(-3) - 1)  / 2
+  uint256 constant z1 = 0x000000000000000059e26bcea0d48bacd4f263f1acdb5c4f5763473177fffffe;
+
   uint256 constant FIELD_MASK = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
   uint256 constant SIGN_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
   uint256 constant ODD_NUM = 0x8000000000000000000000000000000000000000000000000000000000000000;
@@ -88,6 +93,65 @@ library BLS {
       }
       x = addmod(x, 1, N);
     }
+  }
+
+  function mapToPointFT(bytes32 _in) internal view returns (uint256[2] memory p) {
+    uint256 x = uint256(_in) % N;
+    bool decision = isNonResidueFP(x);
+    uint256 a0 = mulmod(x, x, N);
+    a0 = addmod(a0, 4, N);
+    uint256 a1 = mulmod(x, z0, N);
+    uint256 a2 = mulmod(a1, a0, N);
+    a2 = inverse(a2);
+    a1 = mulmod(a1, a1, N);
+    a1 = mulmod(a1, a2, N);
+
+    // x1
+    a1 = mulmod(x, a1, N);
+    x = addmod(z1, N - a1, N);
+    // check curve
+    a1 = mulmod(x, x, N);
+    a1 = mulmod(a1, x, N);
+    a1 = addmod(a1, 3, N);
+    bool found;
+    (a1, found) = sqrt(a1);
+    if (found) {
+      if (decision) {
+        a1 = N - a1;
+      }
+      return [x, a1];
+    }
+
+    // x2
+    x = N - addmod(x, 1, N);
+    // check curve
+    a1 = mulmod(x, x, N);
+    a1 = mulmod(a1, x, N);
+    a1 = addmod(a1, 3, N);
+    (a1, found) = sqrt(a1);
+    if (found) {
+      if (decision) {
+        a1 = N - a1;
+      }
+      return [x, a1];
+    }
+
+    // x3
+    x = mulmod(a0, a0, N);
+    x = mulmod(x, x, N);
+    x = mulmod(x, a2, N);
+    x = mulmod(x, a2, N);
+    x = addmod(x, 1, N);
+    // must be on curve
+    a1 = mulmod(x, x, N);
+    a1 = mulmod(a1, x, N);
+    a1 = addmod(a1, 3, N);
+    (a1, found) = sqrt(a1);
+    require(found, "BLS: bad ft mapping implementation");
+    if (decision) {
+      a1 = N - a1;
+    }
+    return [x, a1];
   }
 
   function isValidPublicKey(uint256[4] memory publicKey) internal pure returns (bool) {
@@ -312,5 +376,24 @@ library BLS {
       hasRoot := eq(xx, mulmod(x, x, N))
     }
     require(callSuccess, "BLS: sqrt modexp call failed");
+  }
+
+  function inverse(uint256 x) internal view returns (uint256 ix) {
+    bool callSuccess;
+    // solium-disable-next-line security/no-inline-assembly
+    assembly {
+      let freemem := mload(0x40)
+      mstore(freemem, 0x20)
+      mstore(add(freemem, 0x20), 0x20)
+      mstore(add(freemem, 0x40), 0x20)
+      mstore(add(freemem, 0x60), x)
+      // (N - 2) = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd45
+      mstore(add(freemem, 0x80), 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd45)
+      // N = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+      mstore(add(freemem, 0xA0), 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47)
+      callSuccess := staticcall(sub(gas(), 2000), 5, freemem, 0xC0, freemem, 0x20)
+      ix := mload(freemem)
+    }
+    require(callSuccess, "BLS: inverse modexp call failed");
   }
 }

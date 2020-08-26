@@ -16,6 +16,7 @@ export const ZERO = web3.utils.toBN('0x00');
 
 export async function init() {
   await mcl.init(mcl.BN_SNARK1);
+  setMappingMode(MAPPING_MODE_FT);
 }
 
 export function setMappingMode(mode: string) {
@@ -30,22 +31,14 @@ export function setMappingMode(mode: string) {
 
 export function hashToPoint(data: string) {
   const e = web3.utils.soliditySha3(data)!;
-  if (mappingMode === MAPPING_MODE_TI) {
-    return mapToPointTI(e);
-  } else if (mappingMode === MAPPING_MODE_FT) {
-    return mapToPointFT(e);
-  }
+  return mapToPoint(e);
 }
 
-export function mapToPointTI(eHex: string) {
+export function mapToPoint(eHex: string) {
   const e0 = web3.utils.toBN(eHex);
   let e1 = new mcl.Fp();
   e1.setStr(e0.mod(FIELD_ORDER).toString());
   return e1.mapToG1();
-}
-
-export function mapToPointFT(eHex: string) {
-  throw new Error('unimplemented');
 }
 
 export function bnToHex(n: any) {
