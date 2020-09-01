@@ -1,4 +1,6 @@
 node_modules
 .vscode
+venv
 build
-types
+.py*
+__pycache__

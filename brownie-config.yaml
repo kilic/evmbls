@@ -1,0 +1,10 @@
+compiler:
+    evm_version: 'istanbul'
+    solc:
+        version: '0.6.10'
+        optimizer:
+            enabled: true
+            runs: 999999
+            details:
+              yul: true
+        remappings: null

@@ -59,15 +59,15 @@ contract GasBLS {
     return operationGasCost - gasleft();
   }
 
-  function isNonResidueFPGasCost(uint256 e) external returns (uint256 operationGasCost) {
+  function isNonResidueFQGasCost(uint256 e) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.isNonResidueFP(e);
+    BLS.isNonResidueFQ(e);
     return operationGasCost - gasleft();
   }
 
-  function isNonResidueFP2GasCost(uint256[2] calldata e) external returns (uint256 operationGasCost) {
+  function isNonResidueFQ2GasCost(uint256[2] calldata e) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.isNonResidueFP2(e);
+    BLS.isNonResidueFQ2(e);
     return operationGasCost - gasleft();
   }
 }

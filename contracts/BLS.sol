@@ -97,7 +97,7 @@ library BLS {
 
   function mapToPointFT(bytes32 _in) internal view returns (uint256[2] memory p) {
     uint256 x = uint256(_in) % N;
-    bool decision = isNonResidueFP(x);
+    bool decision = isNonResidueFQ(x);
     uint256 a0 = mulmod(x, x, N);
     a0 = addmod(a0, 4, N);
     uint256 a1 = mulmod(x, z0, N);
@@ -317,7 +317,7 @@ library BLS {
     }
   }
 
-  function isNonResidueFP(uint256 e) internal view returns (bool isNonResidue) {
+  function isNonResidueFQ(uint256 e) internal view returns (bool isNonResidue) {
     bool callSuccess;
     // solium-disable-next-line security/no-inline-assembly
     assembly {
@@ -333,11 +333,11 @@ library BLS {
       callSuccess := staticcall(sub(gas(), 2000), 5, freemem, 0xC0, freemem, 0x20)
       isNonResidue := eq(1, mload(freemem))
     }
-    require(callSuccess, "BLS: isNonResidueFP modexp call failed");
+    require(callSuccess, "BLS: isNonResidueFQ modexp call failed");
     return !isNonResidue;
   }
 
-  function isNonResidueFP2(uint256[2] memory e) internal view returns (bool isNonResidue) {
+  function isNonResidueFQ2(uint256[2] memory e) internal view returns (bool isNonResidue) {
     uint256 a = addmod(mulmod(e[0], e[0], N), mulmod(e[1], e[1], N), N);
     bool callSuccess;
     // solium-disable-next-line security/no-inline-assembly
@@ -354,7 +354,7 @@ library BLS {
       callSuccess := staticcall(sub(gas(), 2000), 5, freemem, 0xC0, freemem, 0x20)
       isNonResidue := eq(1, mload(freemem))
     }
-    require(callSuccess, "BLS: isNonResidueFP2 modexp call failed");
+    require(callSuccess, "BLS: isNonResidueFQ2 modexp call failed");
     return !isNonResidue;
   }
 

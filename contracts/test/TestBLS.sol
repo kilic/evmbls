@@ -45,12 +45,12 @@ contract TestBLS {
     return BLS.isOnCurveG2(point);
   }
 
-  function isNonResidueFP(uint256 e) external view returns (bool) {
-    return BLS.isNonResidueFP(e);
+  function isNonResidueFQ(uint256 e) external view returns (bool) {
+    return BLS.isNonResidueFQ(e);
   }
 
-  function isNonResidueFP2(uint256[2] calldata e) external view returns (bool) {
-    return BLS.isNonResidueFP2(e);
+  function isNonResidueFQ2(uint256[2] calldata e) external view returns (bool) {
+    return BLS.isNonResidueFQ2(e);
   }
 
   function pubkeyToUncompresed(uint256[2] calldata compressed, uint256[2] memory y) external pure returns (uint256[4] memory uncompressed) {
