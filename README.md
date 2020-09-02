@@ -10,6 +10,7 @@ Signature verification scheme implemented on BN254 elliptic curve. Currently onl
 - [x] Compressed point suport
 - [ ] Example for signature verification in optimistic way
 - [ ] Optimistic hash to curve example
+- [ ] Hash to field [v9](https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-09#appendix-I.1)
 - [x] Map to curve: try and increment G1
 - [ ] Map to curve: try and increment, using helpers to get rid of modExp call
 - [ ] Map to curve: try and increment G2
