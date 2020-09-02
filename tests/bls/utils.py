@@ -10,6 +10,7 @@ P, Q = field_modulus, curve_order
 P_MINUS3_OVER4 = ((P - 3) * inv(4, P)) % P
 P_MINUS1_OVER2 = ((P - 1) * inv(2, P)) % P
 P_PLUS1_OVER4 = ((P + 1) * inv(4, P)) % P
+R = 2**256
 
 
 def rand_fs():
@@ -18,6 +19,10 @@ def rand_fs():
 
 def rand_fq():
     return FQ(randint(0, field_modulus - 1))
+
+
+def rand_r():
+    return randint(0, R)
 
 
 def rand_fq2():

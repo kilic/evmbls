@@ -1,7 +1,7 @@
 import hashlib
 
-from py_ecc.optimized_bn128 import FQ, b, is_on_curve
-from pybls.utils import sqrt
+from py_ecc.optimized_bn128 import FQ, b, is_on_curve, field_modulus
+from bls.utils import sqrt
 
 HASHER_KECCAK = "KECCAK"
 HASHER_SHA256 = "SHA256"
@@ -67,7 +67,7 @@ def map_to_g1(raw_hash):
 
 def map_to_g1_ti(raw_hash):
     one = FQ.one()
-    x = raw_hash
+    x = raw_hash % field_modulus
     while True:
         y = x * x * x + b
         y = sqrt(y)

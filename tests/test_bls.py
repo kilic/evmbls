@@ -1,5 +1,6 @@
 from brownie import accounts
-from bls.utils import sqrt, rand_fq, rand_fq2, rand_g1, is_valid_g1_point, is_valid_g2_point, compress_g1, compress_g2, rand_g2
+from bls.utils import sqrt, rand_fq, rand_fq2, rand_g1, is_valid_g1_point, is_valid_g2_point, compress_g1, compress_g2, rand_g2, rand_r
+from bls.mapping import map_to_g1_ti
 from py_ecc.optimized_bn128 import field_modulus, FQ, FQ2, normalize, G1, neg, b as BN128_B, b2 as BN128_B2
 import pytest
 
@@ -23,6 +24,10 @@ def fq2_to_call(e_0):
 def g2_to_call(point):
     point = normalize(point)
     return [point[0].coeffs[0], point[0].coeffs[1], point[1].coeffs[0], point[1].coeffs[1]]
+
+
+def to_32(n):
+    return n.to_bytes(32, "big")
 
 
 @pytest.fixture(scope="module")
@@ -126,3 +131,13 @@ def test_is_on_curve_g2(bls_tester):  # pylint: disable=redefined-outer-name
         point = rand_point_not_on_curve()
         compressed, _ = compress_g2(point)
         assert not bls_tester.isOnCurveG2Compressed(compressed)
+
+
+def test_map_to_point_ti(bls_tester):
+    print(field_modulus)
+    for _ in range(FUZZ):
+        r = rand_r() % field_modulus
+        expected = map_to_g1_ti(r)
+        result = bls_tester.mapToPointTI(to_32(r))
+        assert expected[0] == result[0]
+        assert expected[1] == result[1]
