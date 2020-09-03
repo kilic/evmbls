@@ -1,4 +1,11 @@
+import { BigNumber, ethers } from 'ethers';
+import { sha256, hexZeroPad, randomBytes, hexlify } from 'ethers/lib/utils';
+
 const mcl = require('mcl-wasm');
+
+export function toBig(n: any) {
+  return BigNumber.from(n);
+}
 
 export type mclG2 = any;
 export type mclG1 = any;
@@ -9,10 +16,9 @@ export type SecretKey = mclFR;
 
 export const MAPPING_MODE_TI = 'TI';
 export const MAPPING_MODE_FT = 'FT';
-let mappingMode = MAPPING_MODE_TI;
 
-export const FIELD_ORDER = web3.utils.toBN('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47');
-export const ZERO = web3.utils.toBN('0x00');
+export const FIELD_ORDER = BigNumber.from('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47');
+export const ZERO = BigNumber.from('0');
 
 export async function init() {
   await mcl.init(mcl.BN_SNARK1);
@@ -30,26 +36,23 @@ export function setMappingMode(mode: string) {
 }
 
 export function hashToPoint(data: string) {
-  const e = web3.utils.soliditySha3(data)!;
+  const e = sha256(data)!;
   return mapToPoint(e);
 }
 
 export function mapToPoint(eHex: string) {
-  const e0 = web3.utils.toBN(eHex);
+  const e0 = toBig(eHex);
   let e1 = new mcl.Fp();
   e1.setStr(e0.mod(FIELD_ORDER).toString());
   return e1.mapToG1();
 }
 
-export function bnToHex(n: any) {
-  return '0x' + web3.utils.padLeft(n.toString(16), 64);
+export function randBytes(n: number) {
+  return hexlify(randomBytes(n));
 }
 
-export function bn(n: string) {
-  if (n.length > 2 && n.slice(0, 2) == '0x') {
-    return web3.utils.toBN(n);
-  }
-  return web3.utils.toBN('0x' + n);
+export function bigToHex(n: BigNumber) {
+  return hexZeroPad(n.toHexString(), 32);
 }
 
 export function mclToHex(p: mclFP, prefix: boolean = true) {
@@ -76,22 +79,27 @@ export function g2() {
 }
 
 export function signOfG1(p: mclG1): boolean {
-  const y = bn(mclToHex(p.getY()));
-  return y.isOdd();
+  const y = toBig(mclToHex(p.getY()));
+  const ONE = toBig(1);
+  return y.and(ONE).eq(ONE);
 }
 
 export function signOfG2(p: mclG2): boolean {
   p.normalize();
   const y = mclToHex(p.getY(), false);
-  return bn(y.slice(64)).isOdd();
+  const ONE = toBig(1);
+  return toBig('0x' + y.slice(64))
+    .and(ONE)
+    .eq(ONE);
 }
 
 export function g1ToCompressed(p: mclG1) {
+  const MASK = toBig('0x8000000000000000000000000000000000000000000000000000000000000000');
   p.normalize();
   if (signOfG1(p)) {
-    const x = bn(mclToHex(p.getX()));
-    const masked = x.or(bn('8000000000000000000000000000000000000000000000000000000000000000'));
-    return bnToHex(masked);
+    const x = toBig(mclToHex(p.getX()));
+    const masked = x.or(MASK);
+    return bigToHex(masked);
   } else {
     return mclToHex(p.getX());
   }
@@ -99,8 +107,8 @@ export function g1ToCompressed(p: mclG1) {
 
 export function g1ToBN(p: mclG1) {
   p.normalize();
-  const x = bn(mclToHex(p.getX()));
-  const y = bn(mclToHex(p.getY()));
+  const x = toBig(mclToHex(p.getX()));
+  const y = toBig(mclToHex(p.getY()));
   return [x, y];
 }
 
@@ -112,11 +120,12 @@ export function g1ToHex(p: mclG1) {
 }
 
 export function g2ToCompressed(p: mclG2) {
+  const MASK = toBig('0x8000000000000000000000000000000000000000000000000000000000000000');
   p.normalize();
   const x = mclToHex(p.getX(), false);
   if (signOfG2(p)) {
-    const masked = bn(x.slice(64)).or(bn('8000000000000000000000000000000000000000000000000000000000000000'));
-    return [bnToHex(masked), '0x' + x.slice(0, 64)];
+    const masked = toBig('0x' + x.slice(64)).or(MASK);
+    return [bigToHex(masked), '0x' + x.slice(0, 64)];
   } else {
     return ['0x' + x.slice(64), '0x' + x.slice(0, 64)];
   }
@@ -125,7 +134,12 @@ export function g2ToCompressed(p: mclG2) {
 export function g2ToBN(p: mclG2) {
   const x = mclToHex(p.getX(), false);
   const y = mclToHex(p.getY(), false);
-  return [bn(x.slice(64)), bn(x.slice(0, 64)), bn(y.slice(64)), bn(y.slice(0, 64))];
+  return [
+    toBig('0x' + x.slice(64)),
+    toBig('0x' + x.slice(0, 64)),
+    toBig('0x' + y.slice(64)),
+    toBig('0x' + y.slice(0, 64)),
+  ];
 }
 
 export function g2ToHex(p: mclG2) {
@@ -172,15 +186,15 @@ export function newG2() {
 }
 
 export function randFr() {
-  const r = web3.utils.randomHex(12);
+  const r = randBytes(12);
   let fr = new mcl.Fr();
   fr.setHashOf(r);
   return fr;
 }
 
 export function randFs() {
-  const r = bn(web3.utils.randomHex(32));
-  return r.umod(FIELD_ORDER);
+  const r = toBig(randBytes(12));
+  return r.mod(FIELD_ORDER);
 }
 
 export function randG1() {

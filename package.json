@@ -2,22 +2,29 @@
   "name": "evmbls",
   "version": "0.1.0",
   "devDependencies": {
+    "@nomiclabs/buidler": "^1.4.5",
+    "@nomiclabs/buidler-ethers": "^2.0.0",
+    "@nomiclabs/buidler-ganache": "^1.3.3",
+    "@typechain/ethers-v5": "^1.0.0",
     "@types/chai": "^4.2.11",
+    "@types/mocha": "^8.0.3",
     "chai": "^4.2.0",
+    "ethers": "^5.0.9",
     "mcl-wasm": "^0.4.2",
+    "mocha": "^8.1.3",
     "prettier": "^2.0.5",
     "prettier-plugin-solidity": "^1.0.0-alpha.54",
-    "truffle-typings": "^1.0.8",
+    "ts-mocha": "^7.0.0",
     "ts-node": "^9.0.0",
-    "typechain": "^1.0.5",
-    "typechain-target-truffle": "^1.0.2",
-    "typescript": "^3.9.6"
+    "typechain": "^2.0.0",
+    "typescript": "^3.9.6",
+    "typings": "^2.1.1"
   },
   "scripts": {
-    "compile": "truffle compile",
-    "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
-    "test": "truffle test test/bls.test.ts",
-    "test:gas": "truffle test test/bls_gas.test.ts",
+    "compile": "buidler compile",
+    "generate": "buidler compile && typechain --target ethers-v5 './build/**/*.json'",
+    "test": "buidler test test/bls.test.ts",
+    "test:gas": "buidler test test/bls_gas.test.ts",
     "ganache": "ganache-cli -d -l 10000000"
   }
 }

@@ -12,8 +12,12 @@
     "lib": ["es2015", "esnext.asynciterable"],
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types", "./types"],
-    "types": ["node", "truffle-contracts"]
+    "types": ["node", "ethers-contracts"]
   },
-  "include": ["**/*.ts"],
+  "include": ["./test"],
+  "files": [
+    "./buidler.config.ts",
+    "./node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts"
+  ],
   "exclude": ["node_modules", "example", "build"]
 }

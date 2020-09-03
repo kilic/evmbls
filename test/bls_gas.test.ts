@@ -1,16 +1,21 @@
-import { GasBLSInstance, TestBLSInstance } from '../types/truffle-contracts';
-
-const GasBLS = artifacts.require('GasBLS');
-const TestBLS = artifacts.require('TestBLS');
 import * as mcl from './mcl';
+import { toBig, bigToHex, ZERO, randBytes } from './mcl';
+import { wallet } from './provider';
+import { GasBls } from '../types/ethers-contracts/GasBls';
+import { assert } from 'chai';
+import { GasBlsFactory } from '../types/ethers-contracts/GasBlsFactory';
+import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
+import { TestBls } from '../types/ethers-contracts/TestBls';
+const FACTORY_GAS_BLS = new GasBlsFactory(wallet);
+const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
 
-contract('BLS', (accounts) => {
-  let bls: GasBLSInstance;
-  let _bls: TestBLSInstance;
+describe('BLS', () => {
+  let bls: GasBls;
+  let _bls: TestBls;
   before(async function () {
     await mcl.init();
-    bls = await GasBLS.new();
-    _bls = await TestBLS.new();
+    bls = await FACTORY_GAS_BLS.deploy();
+    _bls = await FACTORY_TEST_BLS.deploy();
   });
   it('verify signature', async function () {
     const n = 100;
@@ -18,7 +23,7 @@ contract('BLS', (accounts) => {
     const pubkeys = [];
     let aggSignature = mcl.newG1();
     for (let i = 0; i < n; i++) {
-      const message = web3.utils.randomHex(12);
+      const message = randBytes(12);
       const { pubkey, secret } = mcl.newKeyPair();
       const { signature, M } = mcl.sign(message, secret);
       aggSignature = mcl.aggreagate(aggSignature, signature);
@@ -28,25 +33,25 @@ contract('BLS', (accounts) => {
     let messages_ser = messages.map((p) => mcl.g1ToBN(p));
     let pubkeys_ser = pubkeys.map((p) => mcl.g2ToBN(p));
     let sig_ser = mcl.g1ToBN(aggSignature);
-    let cost = await bls.verifyMultipleGasCost.call(sig_ser, pubkeys_ser, messages_ser);
+    let cost = await bls.callStatic.verifyMultipleGasCost(sig_ser, pubkeys_ser, messages_ser);
     console.log(`verify signature for ${n} distinct message: ${cost.toNumber()}`);
   });
   it('verify single signature', async function () {
-    const message = web3.utils.randomHex(12);
+    const message = randBytes(12);
     const { pubkey, secret } = mcl.newKeyPair();
     const { signature, M } = mcl.sign(message, secret);
     let message_ser = mcl.g1ToBN(M);
     let pubkey_ser = mcl.g2ToBN(pubkey);
     let sig_ser = mcl.g1ToBN(signature);
-    let cost = await bls.verifySingleGasCost.call(sig_ser, pubkey_ser, message_ser);
+    let cost = await bls.callStatic.verifySingleGasCost(sig_ser, pubkey_ser, message_ser);
     console.log(`verify single signature:: ${cost.toNumber()}`);
   });
   it('map to point ti', async function () {
     const n = 50;
     let totalCost = 0;
     for (let i = 0; i < n; i++) {
-      const data = web3.utils.randomHex(32);
-      let cost = await bls.mapToPointTIGasCost.call(data);
+      const data = randBytes(32);
+      let cost = await bls.callStatic.mapToPointTIGasCost(data);
       totalCost += cost.toNumber();
     }
     console.log(`map to point ti average cost: ${totalCost / n}`);
@@ -56,8 +61,8 @@ contract('BLS', (accounts) => {
     const n = 50;
     let totalCost = 0;
     for (let i = 0; i < n; i++) {
-      const data = web3.utils.randomHex(32);
-      let cost = await bls.mapToPointFTGasCost.call(data);
+      const data = randBytes(32);
+      let cost = await bls.callStatic.mapToPointFTGasCost(data);
       totalCost += cost.toNumber();
     }
     console.log(`map to point ft average cost: ${totalCost / n}`);
@@ -66,23 +71,23 @@ contract('BLS', (accounts) => {
     const out1 = '0x1df8e11fbe95fd67672c36a338f54f329c18b412416f878520afcc3999600959';
     const out2 = '0x154d89ff22da42dd1db7ef090db1d5cbb1193d47bebf7fed54f450a48078eeaa';
     const res = await _bls.mapToPointFT(data);
-    assert.equal(out1, mcl.bnToHex(res[0]));
-    assert.equal(out2, mcl.bnToHex(res[1]));
-    const cost = await bls.mapToPointFTGasCost.call(data);
+    assert.equal(out1, mcl.bigToHex(res[0]));
+    assert.equal(out2, mcl.bigToHex(res[1]));
+    const cost = await bls.callStatic.mapToPointFTGasCost(data);
     console.log(`map to point ft worst-case cost: ${cost}`);
   });
   it('is on curve g1', async function () {
     let point = mcl.randG1();
-    let cost = await bls.isOnCurveG1GasCost.call(mcl.g1ToBN(point));
+    let cost = await bls.callStatic.isOnCurveG1GasCost(mcl.g1ToBN(point));
     console.log(`is on curve g1 gas cost: ${cost.toNumber()}`);
-    cost = await bls.isOnCurveG1CompressedGasCost.call(mcl.g1ToCompressed(point));
+    cost = await bls.callStatic.isOnCurveG1CompressedGasCost(mcl.g1ToCompressed(point));
     console.log(`is on curve compressed g1 gas cost: ${cost.toNumber()}`);
   });
   it('is on curve g2', async function () {
     let point = mcl.randG2();
-    let cost = await bls.isOnCurveG2GasCost.call(mcl.g2ToBN(point));
+    let cost = await bls.callStatic.isOnCurveG2GasCost(mcl.g2ToBN(point));
     console.log(`is on curve g2 gas cost: ${cost.toNumber()}`);
-    cost = await bls.isOnCurveG2CompressedGasCost.call(mcl.g2ToCompressed(point));
+    cost = await bls.callStatic.isOnCurveG2CompressedGasCost(mcl.g2ToCompressed(point));
     console.log(`is on curve compressed g2 gas cost: ${cost.toNumber()}`);
   });
 });
