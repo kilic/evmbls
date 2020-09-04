@@ -1,10 +1,11 @@
 import * as mcl from './mcl';
-import { toBig, bigToHex, ZERO, randBytes } from './mcl';
+import { toBig, bigToHex, ZERO, randBig, randHex } from './mcl';
 import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { wallet } from './provider';
 import { TestBls } from '../types/ethers-contracts/TestBls';
-import { assert } from 'chai';
-import { solidityKeccak256, soliditySha256 } from 'ethers/lib/utils';
+import { assert, expect } from 'chai';
+import { solidityKeccak256, soliditySha256, hexlify, randomBytes } from 'ethers/lib/utils';
+import { expandMsg, hashToField } from './hash_to_field';
 const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
 
 const MINUS_ONE = toBig('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46');
@@ -110,7 +111,7 @@ describe('BLS', () => {
       assert.isTrue(isOnCurve);
     }
     for (let i = 0; i < 20; i++) {
-      const point = [toBig(randBytes(31)), toBig(randBytes(31))];
+      const point = [randBig(31), randBig(31)];
       const isOnCurve = await bls.isOnCurveG1(point);
       assert.isFalse(isOnCurve);
     }
@@ -125,7 +126,7 @@ describe('BLS', () => {
       assert.isTrue(isOnCurve);
     }
     for (let i = 0; i < 20; i++) {
-      const point = [toBig(randBytes(31)), toBig(randBytes(31)), toBig(randBytes(31)), toBig(randBytes(31))];
+      const point = [randBig(31), randBig(31), randBig(31), randBig(31)];
       const isOnCurve = await bls.isOnCurveG2(point);
       assert.isFalse(isOnCurve);
     }
@@ -163,7 +164,7 @@ describe('BLS', () => {
   it('map to point, ft', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_FT);
     for (let i = 0; i < 100; i++) {
-      const data = randBytes(12);
+      const data = randHex(12);
       const e = solidityKeccak256(['bytes'], [data])!;
       let expect = mcl.g1ToHex(mcl.mapToPoint(e));
       let res = await bls.mapToPointFT(e);
@@ -174,7 +175,7 @@ describe('BLS', () => {
   it('map to point, ti', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_TI);
     for (let i = 0; i < 20; i++) {
-      const data = randBytes(12);
+      const data = randHex(12);
       const e = soliditySha256(['bytes'], [data])!;
       let expect = mcl.g1ToHex(mcl.mapToPoint(e));
       let res = await bls.mapToPointTI(e);
@@ -182,14 +183,41 @@ describe('BLS', () => {
       assert.equal(expect[1], bigToHex(res[1]));
     }
   });
+  it('expand message to 96', async function () {
+    mcl.setMappingMode(mcl.MAPPING_MODE_FT);
+    const domain = Uint8Array.from(Buffer.from('some domain', 'utf8'));
+    for (let j = 0; j < 2; j++) {
+      for (let i = 0; i < 100; i++) {
+        const msg = randomBytes(i);
+        const expected = expandMsg(domain, msg, 96);
+        const result = await bls.expandMsg(domain, msg);
+        assert.equal(hexlify(expected), result);
+      }
+    }
+  });
+  it('hash to field', async function () {
+    mcl.setMappingMode(mcl.MAPPING_MODE_FT);
+    const domain = Uint8Array.from(Buffer.from('some domain', 'utf8'));
+
+    for (let j = 0; j < 2; j++) {
+      for (let i = 0; i < 100; i++) {
+        const msg = randomBytes(i);
+        const expected = hashToField(domain, msg, 2);
+        const result = await bls.hashToField(domain, msg);
+        assert.equal(hexlify(expected[0]), hexlify(result[0]));
+        assert.equal(hexlify(expected[1]), hexlify(result[1]));
+      }
+    }
+  });
   it('verify aggregated signature', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_TI);
+    mcl.setDomain('testing evmbls');
     const n = 10;
     const messages = [];
     const pubkeys = [];
     let aggSignature = mcl.newG1();
     for (let i = 0; i < n; i++) {
-      const message = randBytes(12);
+      const message = randHex(12);
       const { pubkey, secret } = mcl.newKeyPair();
       const { signature, M } = mcl.sign(message, secret);
       aggSignature = mcl.aggreagate(aggSignature, signature);
@@ -204,7 +232,8 @@ describe('BLS', () => {
   });
   it('verify single signature', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_TI);
-    const message = randBytes(12);
+    mcl.setDomain('testing evmbls');
+    const message = randHex(12);
     const { pubkey, secret } = mcl.newKeyPair();
     const { signature, M } = mcl.sign(message, secret);
     let message_ser = mcl.g1ToBN(M);

@@ -1,6 +1,7 @@
 pragma solidity ^0.6.10;
 
 import { BLS } from "../BLS.sol";
+import { HashToFieldV9 } from "../HashToFieldV9.sol";
 
 contract TestBLS {
   function verifyMultiple(
@@ -67,5 +68,13 @@ contract TestBLS {
 
   function isValidCompressedSignature(uint256 compressed) external view returns (bool) {
     return BLS.isValidCompressedSignature(compressed);
+  }
+
+  function expandMsg(bytes calldata domain, bytes calldata message) external view returns (bytes memory) {
+    return HashToFieldV9.expandMsgTo96(domain, message);
+  }
+
+  function hashToField(bytes calldata domain, bytes calldata message) external view returns (uint256[2] memory) {
+    return HashToFieldV9.hashToField(domain, message);
   }
 }

@@ -1,5 +1,6 @@
 import { BigNumber, ethers } from 'ethers';
 import { sha256, hexZeroPad, randomBytes, hexlify } from 'ethers/lib/utils';
+import { hashToField } from './hash_to_field';
 
 const mcl = require('mcl-wasm');
 
@@ -20,9 +21,19 @@ export const MAPPING_MODE_FT = 'FT';
 export const FIELD_ORDER = BigNumber.from('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47');
 export const ZERO = BigNumber.from('0');
 
+let DOMAIN: Uint8Array;
+
 export async function init() {
   await mcl.init(mcl.BN_SNARK1);
   setMappingMode(MAPPING_MODE_FT);
+}
+
+export function setDomain(domain: string) {
+  DOMAIN = Uint8Array.from(Buffer.from(domain, 'utf8'));
+}
+
+export function setDomainHex(domain: string) {
+  DOMAIN = Uint8Array.from(Buffer.from(domain, 'hex'));
 }
 
 export function setMappingMode(mode: string) {
@@ -35,9 +46,20 @@ export function setMappingMode(mode: string) {
   }
 }
 
-export function hashToPoint(data: string) {
-  const e = sha256(data)!;
-  return mapToPoint(e);
+export function hashToPoint(msg: string) {
+  if (!ethers.utils.isHexString(msg)) {
+    throw new Error('message is expected to be hex string');
+  }
+
+  const _msg = Uint8Array.from(Buffer.from(msg.slice(2), 'hex'));
+  const hashRes = hashToField(DOMAIN, _msg, 2);
+  const e0 = hashRes[0];
+  const e1 = hashRes[1];
+  const p0 = mapToPoint(e0.toHexString());
+  const p1 = mapToPoint(e1.toHexString());
+  const p = mcl.add(p0, p1);
+  p.normalize();
+  return p;
 }
 
 export function mapToPoint(eHex: string) {
@@ -47,8 +69,12 @@ export function mapToPoint(eHex: string) {
   return e1.mapToG1();
 }
 
-export function randBytes(n: number) {
+export function randHex(n: number) {
   return hexlify(randomBytes(n));
+}
+
+export function randBig(n: number) {
+  return toBig(randomBytes(n));
 }
 
 export function bigToHex(n: BigNumber) {
@@ -186,14 +212,14 @@ export function newG2() {
 }
 
 export function randFr() {
-  const r = randBytes(12);
+  const r = randHex(12);
   let fr = new mcl.Fr();
   fr.setHashOf(r);
   return fr;
 }
 
 export function randFs() {
-  const r = toBig(randBytes(12));
+  const r = randBig(12);
   return r.mod(FIELD_ORDER);
 }
 
