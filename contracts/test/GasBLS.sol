@@ -29,9 +29,21 @@ contract GasBLS {
     return operationGasCost - gasleft();
   }
 
-  function mapToPointFTGasCost(bytes32 e) external returns (uint256 operationGasCost) {
+  function mapToPointFTGasCost(uint256 e) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
     BLS.mapToPointFT(e);
+    return operationGasCost - gasleft();
+  }
+
+  function hashToPointGasCost(bytes memory domain, bytes memory message) external returns (uint256 operationGasCost) {
+    operationGasCost = gasleft();
+    BLS.hashToPoint(domain, message);
+    return operationGasCost - gasleft();
+  }
+
+  function hashToFieldGasCost(bytes memory domain, bytes memory message) external returns (uint256 operationGasCost) {
+    operationGasCost = gasleft();
+    BLS.hashToField(domain, message);
     return operationGasCost - gasleft();
   }
 

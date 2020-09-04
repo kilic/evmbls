@@ -1,7 +1,6 @@
 pragma solidity ^0.6.10;
 
 import { BLS } from "../BLS.sol";
-import { HashToFieldV9 } from "../HashToFieldV9.sol";
 
 contract TestBLS {
   function verifyMultiple(
@@ -24,7 +23,7 @@ contract TestBLS {
     return BLS.mapToPointTI(e);
   }
 
-  function mapToPointFT(bytes32 e) external view returns (uint256[2] memory p) {
+  function mapToPointFT(uint256 e) external view returns (uint256[2] memory p) {
     return BLS.mapToPointFT(e);
   }
 
@@ -71,10 +70,14 @@ contract TestBLS {
   }
 
   function expandMsg(bytes calldata domain, bytes calldata message) external view returns (bytes memory) {
-    return HashToFieldV9.expandMsgTo96(domain, message);
+    return BLS.expandMsgTo96(domain, message);
   }
 
   function hashToField(bytes calldata domain, bytes calldata message) external view returns (uint256[2] memory) {
-    return HashToFieldV9.hashToField(domain, message);
+    return BLS.hashToField(domain, message);
+  }
+
+  function hashToPoint(bytes memory domain, bytes memory message) external view returns (uint256[2] memory) {
+    return BLS.hashToPoint(domain, message);
   }
 }

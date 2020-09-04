@@ -1,20 +1,23 @@
 import * as mcl from './mcl';
-import { toBig, bigToHex, ZERO, randBig, randHex } from './mcl';
+import { toBig, bigToHex, ZERO, randBig, randHex, reduceToField } from './mcl';
 import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { wallet } from './provider';
 import { TestBls } from '../types/ethers-contracts/TestBls';
-import { assert, expect } from 'chai';
-import { solidityKeccak256, soliditySha256, hexlify, randomBytes } from 'ethers/lib/utils';
+import { assert } from 'chai';
+import { soliditySha256, hexlify, randomBytes } from 'ethers/lib/utils';
 import { expandMsg, hashToField } from './hash_to_field';
 const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
 
 const MINUS_ONE = toBig('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46');
 const NON_RESIDUE_2 = [toBig('0x09'), toBig('0x01')];
+const DOMAIN_STR = 'testing-evmbls';
+const DOMAIN = Uint8Array.from(Buffer.from(DOMAIN_STR, 'utf8'));
 
 describe('BLS', () => {
   let bls: TestBls;
   before(async function () {
     await mcl.init();
+    mcl.setDomain(DOMAIN_STR);
     bls = await FACTORY_TEST_BLS.deploy();
   });
   it('fp is non residue', async function () {
@@ -161,17 +164,6 @@ describe('BLS', () => {
       assert.isTrue(signature.isEqual(_signature));
     }
   });
-  it('map to point, ft', async function () {
-    mcl.setMappingMode(mcl.MAPPING_MODE_FT);
-    for (let i = 0; i < 100; i++) {
-      const data = randHex(12);
-      const e = solidityKeccak256(['bytes'], [data])!;
-      let expect = mcl.g1ToHex(mcl.mapToPoint(e));
-      let res = await bls.mapToPointFT(e);
-      assert.equal(expect[0], bigToHex(res[0]), 'e ' + e);
-      assert.equal(expect[1], bigToHex(res[1]), 'e ' + e);
-    }
-  });
   it('map to point, ti', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_TI);
     for (let i = 0; i < 20; i++) {
@@ -183,29 +175,48 @@ describe('BLS', () => {
       assert.equal(expect[1], bigToHex(res[1]));
     }
   });
+  it('map to point, ft', async function () {
+    mcl.setMappingMode(mcl.MAPPING_MODE_FT);
+    for (let i = 0; i < 100; i++) {
+      const e = mcl.reduceToField(randHex(32));
+      let expect = mcl.g1ToHex(mcl.mapToPoint(e));
+      let res = await bls.mapToPointFT(e);
+      assert.equal(expect[0], bigToHex(res[0]), 'e ' + e);
+      assert.equal(expect[1], bigToHex(res[1]), 'e ' + e);
+    }
+  });
   it('expand message to 96', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_FT);
-    const domain = Uint8Array.from(Buffer.from('some domain', 'utf8'));
     for (let j = 0; j < 2; j++) {
       for (let i = 0; i < 100; i++) {
         const msg = randomBytes(i);
-        const expected = expandMsg(domain, msg, 96);
-        const result = await bls.expandMsg(domain, msg);
+        const expected = expandMsg(DOMAIN, msg, 96);
+        const result = await bls.expandMsg(DOMAIN, msg);
         assert.equal(hexlify(expected), result);
       }
     }
   });
   it('hash to field', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_FT);
-    const domain = Uint8Array.from(Buffer.from('some domain', 'utf8'));
-
     for (let j = 0; j < 2; j++) {
       for (let i = 0; i < 100; i++) {
         const msg = randomBytes(i);
-        const expected = hashToField(domain, msg, 2);
-        const result = await bls.hashToField(domain, msg);
+        const expected = hashToField(DOMAIN, msg, 2);
+        const result = await bls.hashToField(DOMAIN, msg);
         assert.equal(hexlify(expected[0]), hexlify(result[0]));
         assert.equal(hexlify(expected[1]), hexlify(result[1]));
+      }
+    }
+  });
+  it('hash to point', async function () {
+    mcl.setMappingMode(mcl.MAPPING_MODE_FT);
+    for (let j = 0; j < 2; j++) {
+      for (let i = 0; i < 100; i++) {
+        const msg = randomBytes(i);
+        const expected = mcl.g1ToHex(mcl.hashToPoint(hexlify(msg)));
+        const result = await bls.hashToPoint(DOMAIN, msg);
+        assert.equal(expected[0], bigToHex(result[0]));
+        assert.equal(expected[1], bigToHex(result[1]));
       }
     }
   });

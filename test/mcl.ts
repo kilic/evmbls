@@ -62,6 +62,11 @@ export function hashToPoint(msg: string) {
   return p;
 }
 
+export function reduceToField(eHex: any) {
+  const e0 = toBig(eHex);
+  return bigToHex(e0.mod(FIELD_ORDER));
+}
+
 export function mapToPoint(eHex: string) {
   const e0 = toBig(eHex);
   let e1 = new mcl.Fp();

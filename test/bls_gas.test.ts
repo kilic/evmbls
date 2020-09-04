@@ -1,5 +1,5 @@
 import * as mcl from './mcl';
-import { toBig, bigToHex, ZERO, randBytes } from './mcl';
+import { randHex } from './mcl';
 import { wallet } from './provider';
 import { GasBls } from '../types/ethers-contracts/GasBls';
 import { assert } from 'chai';
@@ -8,12 +8,15 @@ import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { TestBls } from '../types/ethers-contracts/TestBls';
 const FACTORY_GAS_BLS = new GasBlsFactory(wallet);
 const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
+const DOMAIN_STR = 'gas-bench-evmbls';
+const DOMAIN = Uint8Array.from(Buffer.from(DOMAIN_STR, 'utf8'));
 
 describe('BLS', () => {
   let bls: GasBls;
   let _bls: TestBls;
   before(async function () {
     await mcl.init();
+    mcl.setDomain(DOMAIN_STR);
     bls = await FACTORY_GAS_BLS.deploy();
     _bls = await FACTORY_TEST_BLS.deploy();
   });
@@ -23,7 +26,7 @@ describe('BLS', () => {
     const pubkeys = [];
     let aggSignature = mcl.newG1();
     for (let i = 0; i < n; i++) {
-      const message = randBytes(12);
+      const message = randHex(12);
       const { pubkey, secret } = mcl.newKeyPair();
       const { signature, M } = mcl.sign(message, secret);
       aggSignature = mcl.aggreagate(aggSignature, signature);
@@ -37,7 +40,7 @@ describe('BLS', () => {
     console.log(`verify signature for ${n} distinct message: ${cost.toNumber()}`);
   });
   it('verify single signature', async function () {
-    const message = randBytes(12);
+    const message = randHex(12);
     const { pubkey, secret } = mcl.newKeyPair();
     const { signature, M } = mcl.sign(message, secret);
     let message_ser = mcl.g1ToBN(M);
@@ -50,7 +53,7 @@ describe('BLS', () => {
     const n = 50;
     let totalCost = 0;
     for (let i = 0; i < n; i++) {
-      const data = randBytes(32);
+      const data = randHex(32);
       let cost = await bls.callStatic.mapToPointTIGasCost(data);
       totalCost += cost.toNumber();
     }
@@ -61,13 +64,13 @@ describe('BLS', () => {
     const n = 50;
     let totalCost = 0;
     for (let i = 0; i < n; i++) {
-      const data = randBytes(32);
+      const data = mcl.reduceToField(randHex(32));
       let cost = await bls.callStatic.mapToPointFTGasCost(data);
       totalCost += cost.toNumber();
     }
     console.log(`map to point ft average cost: ${totalCost / n}`);
     // worst-case
-    const data = '0xfae3fed247eb2669079cc800c40743e071e188dbfac44a02485217296fe1521e';
+    const data = mcl.reduceToField('0xfae3fed247eb2669079cc800c40743e071e188dbfac44a02485217296fe1521e');
     const out1 = '0x1df8e11fbe95fd67672c36a338f54f329c18b412416f878520afcc3999600959';
     const out2 = '0x154d89ff22da42dd1db7ef090db1d5cbb1193d47bebf7fed54f450a48078eeaa';
     const res = await _bls.mapToPointFT(data);
@@ -75,6 +78,28 @@ describe('BLS', () => {
     assert.equal(out2, mcl.bigToHex(res[1]));
     const cost = await bls.callStatic.mapToPointFTGasCost(data);
     console.log(`map to point ft worst-case cost: ${cost}`);
+  });
+  it('hash to field', async function () {
+    // average
+    const n = 50;
+    let totalCost = 0;
+    for (let i = 0; i < n; i++) {
+      const msg = randHex(20);
+      let cost = await bls.callStatic.hashToFieldGasCost(DOMAIN, msg);
+      totalCost += cost.toNumber();
+    }
+    console.log(`hash to field average cost: ${totalCost / n}`);
+  });
+  it('hash to point', async function () {
+    // average
+    const n = 50;
+    let totalCost = 0;
+    for (let i = 0; i < n; i++) {
+      const msg = randHex(20);
+      let cost = await bls.callStatic.hashToPointGasCost(DOMAIN, msg);
+      totalCost += cost.toNumber();
+    }
+    console.log(`hash to point average cost: ${totalCost / n}`);
   });
   it('is on curve g1', async function () {
     let point = mcl.randG1();
