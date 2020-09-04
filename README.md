@@ -1,8 +1,8 @@
 # evmbls
 
-[BLS Signature](https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html) verification and ECC utility contracts.
+> [BLS Signature](https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html) verification and ECC utility contracts.
 
-Signature verification scheme implemented on BN254 elliptic curve. Currently only public-key-on-G2 setup is available.
+Signature verification scheme is implemented on BN254 elliptic curve. Currently only public-key-on-G2 setup is available.
 
 # Roadmap
 
