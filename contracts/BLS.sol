@@ -447,7 +447,7 @@ library BLS {
 
   function expandMsgTo96(bytes memory domain, bytes memory message) internal pure returns (bytes memory) {
     uint256 t1 = domain.length;
-    require(t1 < 256, "HashToFieldV9: invalid domain length");
+    require(t1 < 256, "BLS: invalid domain length");
     // zero<64>|msg<var>|lib_str<2>|I2OSP(0, 1)<1>|dst<var>|dst_len<1>
     uint256 t0 = message.length;
     bytes memory msg0 = new bytes(t1 + t0 + 64 + 4);
