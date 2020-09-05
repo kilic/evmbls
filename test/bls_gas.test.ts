@@ -1,5 +1,5 @@
 import * as mcl from './mcl';
-import { randHex } from './mcl';
+import { randHex, randFsHex } from './mcl';
 import { wallet } from './provider';
 import { GasBls } from '../types/ethers-contracts/GasBls';
 import { assert } from 'chai';
@@ -64,13 +64,13 @@ describe('BLS', () => {
     const n = 50;
     let totalCost = 0;
     for (let i = 0; i < n; i++) {
-      const data = mcl.reduceToField(randHex(32));
-      let cost = await bls.callStatic.mapToPointFTGasCost(data);
+      const e = randFsHex();
+      let cost = await bls.callStatic.mapToPointFTGasCost(e);
       totalCost += cost.toNumber();
     }
     console.log(`map to point ft average cost: ${totalCost / n}`);
     // worst-case
-    const data = mcl.reduceToField('0xfae3fed247eb2669079cc800c40743e071e188dbfac44a02485217296fe1521e');
+    const data = '0x8ee7693e1f305986e0b6b703c808a0c7c5a7404f08b55401baf5ab735705fbb';
     const out1 = '0x1df8e11fbe95fd67672c36a338f54f329c18b412416f878520afcc3999600959';
     const out2 = '0x154d89ff22da42dd1db7ef090db1d5cbb1193d47bebf7fed54f450a48078eeaa';
     const res = await _bls.mapToPointFT(data);

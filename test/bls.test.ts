@@ -1,11 +1,11 @@
 import * as mcl from './mcl';
-import { toBig, bigToHex, ZERO, randBig, randHex, reduceToField } from './mcl';
+import { toBig, bigToHex, ZERO, randBig, randHex, randFsHex } from './mcl';
 import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { wallet } from './provider';
 import { TestBls } from '../types/ethers-contracts/TestBls';
 import { assert } from 'chai';
 import { soliditySha256, hexlify, randomBytes } from 'ethers/lib/utils';
-import { expandMsg, hashToField } from './hash_to_field';
+import { expandMsg, hashToField, FIELD_ORDER } from './hash_to_field';
 const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
 
 const MINUS_ONE = toBig('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46');
@@ -28,7 +28,7 @@ describe('BLS', () => {
     const residues = [];
     for (let i = 0; i < 5; i++) {
       const a = mcl.randFs();
-      residues.push(a.mul(a));
+      residues.push(a.mul(a).mod(FIELD_ORDER));
     }
     const nonResidues = [
       toBig('0x23d9bb51d142f4a4b8a533721a30648b5ff7f9387b43d4fc8232db20377611bc'),
@@ -178,7 +178,7 @@ describe('BLS', () => {
   it('map to point, ft', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_FT);
     for (let i = 0; i < 100; i++) {
-      const e = mcl.reduceToField(randHex(32));
+      const e = mcl.randFsHex();
       let expect = mcl.g1ToHex(mcl.mapToPoint(e));
       let res = await bls.mapToPointFT(e);
       assert.equal(expect[0], bigToHex(res[0]), 'e ' + e);

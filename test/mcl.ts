@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from 'ethers';
-import { sha256, hexZeroPad, randomBytes, hexlify } from 'ethers/lib/utils';
+import { hexZeroPad, randomBytes, hexlify } from 'ethers/lib/utils';
 import { hashToField } from './hash_to_field';
 
 const mcl = require('mcl-wasm');
@@ -60,11 +60,6 @@ export function hashToPoint(msg: string) {
   const p = mcl.add(p0, p1);
   p.normalize();
   return p;
-}
-
-export function reduceToField(eHex: any) {
-  const e0 = toBig(eHex);
-  return bigToHex(e0.mod(FIELD_ORDER));
 }
 
 export function mapToPoint(eHex: string) {
@@ -224,8 +219,13 @@ export function randFr() {
 }
 
 export function randFs() {
-  const r = randBig(12);
+  const r = randBig(32);
   return r.mod(FIELD_ORDER);
+}
+
+export function randFsHex() {
+  const r = randBig(32);
+  return bigToHex(r.mod(FIELD_ORDER));
 }
 
 export function randG1() {
