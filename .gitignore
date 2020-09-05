@@ -4,3 +4,6 @@ venv
 build
 .py*
 __pycache__
+cache
+types
+*.log
