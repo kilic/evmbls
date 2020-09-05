@@ -4,7 +4,7 @@
 
 Signature verification scheme is implemented on BN254 elliptic curve. Currently only public-key-on-G2 setup is available.
 
-# Roadmap
+# Features
 
 - [x] Aggregated signature verification
 - [x] Compressed point suport
