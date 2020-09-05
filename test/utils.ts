@@ -5,6 +5,8 @@ import { assert } from 'chai';
 export const FIELD_ORDER = BigNumber.from('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47');
 
 export const ZERO = BigNumber.from('0');
+export const ONE = BigNumber.from('1');
+export const TWO = BigNumber.from('2');
 
 export function toBig(n: any): BigNumber {
   return BigNumber.from(n);
@@ -54,6 +56,11 @@ export function sqrt(nn: BigNumber): { n: BigNumber; found: boolean } {
   return { n, found };
 }
 
+export function inverse(a: BigNumber): BigNumber {
+  const z = FIELD_ORDER.sub(TWO);
+  return exp(a, z);
+}
+
 function mulmod(a: BigNumber, b: BigNumber): BigNumber {
   return a.mul(b).mod(FIELD_ORDER);
 }
@@ -64,7 +71,7 @@ function test_sqrt() {
     const aa = mulmod(a, a);
     const res = sqrt(aa);
     assert.isTrue(res.found);
-    assert.equal(mulmod(res.n, res.n).toHexString(), aa.toHexString());
+    assert.isTrue(mulmod(res.n, res.n).eq(aa));
   }
   const nonResidues = [
     toBig('0x23d9bb51d142f4a4b8a533721a30648b5ff7f9387b43d4fc8232db20377611bc'),
@@ -79,8 +86,17 @@ function test_sqrt() {
   }
 }
 
-async function test() {
-  test_sqrt();
+function test_inv() {
+  for (let i = 0; i < 100; i++) {
+    const a = randFs();
+    const ia = inverse(a);
+    assert.isTrue(mulmod(a, ia).eq(ONE));
+  }
 }
 
-test();
+async function test() {
+  test_sqrt();
+  test_inv();
+}
+
+// test();

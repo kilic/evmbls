@@ -17,6 +17,14 @@ contract TestBLS is BLS {
     return sqrtFaster(xx);
   }
 
+  function _inverse(uint256 a) external view returns (uint256) {
+    return inverse(a);
+  }
+
+  function _inverseFaster(uint256 a) external view returns (uint256) {
+    return inverseFaster(a);
+  }
+
   function _verifyMultiple(
     uint256[2] calldata signature,
     uint256[4][] calldata pubkeys,

@@ -133,7 +133,7 @@ contract BLS {
     a0 = addmod(a0, 4, N);
     uint256 a1 = mulmod(x, z0, N);
     uint256 a2 = mulmod(a1, a0, N);
-    a2 = inverse(a2);
+    a2 = inverseFaster(a2);
     a1 = mulmod(a1, a1, N);
     a1 = mulmod(a1, a2, N);
 
@@ -412,6 +412,10 @@ contract BLS {
       hasRoot := eq(xx, mulmod(x, x, N))
     }
     require(callSuccess, "BLS: sqrt modexp call failed");
+  }
+
+  function inverseFaster(uint256 a) internal view returns (uint256) {
+    return modexp_3064_fd54.run(a);
   }
 
   function inverse(uint256 x) internal view returns (uint256 ix) {

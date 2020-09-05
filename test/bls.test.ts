@@ -1,5 +1,5 @@
 import * as mcl from './mcl';
-import { toBig, bigToHex, ZERO, randBig, randHex, randFs, randFsHex, sqrt } from './utils';
+import { toBig, bigToHex, ZERO, randBig, randHex, randFs, randFsHex, sqrt, inverse } from './utils';
 import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { wallet } from './provider';
 import { TestBls } from '../types/ethers-contracts/TestBls';
@@ -37,6 +37,16 @@ describe('BLS', () => {
       const r2 = await bls._sqrtFaster(a);
       assert.isTrue(r0.n.eq(r2[0]));
       assert.equal(r0.found, r2[1]);
+    }
+  });
+  it('inverse', async function () {
+    for (let i = 0; i < 100; i++) {
+      const a = randFs();
+      const r0 = inverse(a);
+      const r1 = await bls._inverse(a);
+      assert.isTrue(r0.eq(r1));
+      const r2 = await bls._inverseFaster(a);
+      assert.isTrue(r0.eq(r2));
     }
   });
   it('fp is non residue', async function () {
