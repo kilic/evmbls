@@ -17,4 +17,4 @@ Signature verification scheme is implemented on BN254 elliptic curve. Currently 
 - [x] Map to curve: [Fouque Tibouchi](https://www.di.ens.fr/~fouque/pub/latincrypt12.pdf)
 - [ ] Map to curve: [Fouque Tibouchi](https://www.di.ens.fr/~fouque/pub/latincrypt12.pdf) with modExp helpers
 - [ ] EIP-2537 support
-- [ ] [Cheaper modexp](https://github.com/ChihChengLiang/modexp)
+- [x] [Cheaper modexp for inversion and sqrt](https://github.com/ChihChengLiang/modexp)
