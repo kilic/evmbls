@@ -14,7 +14,7 @@
     "typeRoots": ["./node_modules/@types", "./types"],
     "types": ["node", "ethers-contracts"]
   },
-  "include": ["./test"],
+  "include": ["./test", "./modexp"],
   "files": [
     "./buidler.config.ts",
     "./node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts"

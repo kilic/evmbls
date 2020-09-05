@@ -6,6 +6,11 @@ import { TestBls } from '../types/ethers-contracts/TestBls';
 import { assert } from 'chai';
 import { soliditySha256, hexlify, randomBytes } from 'ethers/lib/utils';
 import { expandMsg, hashToField, FIELD_ORDER } from './hash_to_field';
+import { ContractFactory } from 'ethers';
+const modexp_sqrt = require('../modexp/modexp_c191_3f52.json');
+const modexp_inverse = require('../modexp/modexp_3064_fd54.json');
+const FACTORY_MODEXP_SQRT = new ContractFactory(modexp_sqrt.abi, modexp_sqrt.bytecode, wallet);
+const FACTORY_MODEXP_INVERSE = new ContractFactory(modexp_inverse.abi, modexp_inverse.bytecode, wallet);
 const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
 
 const MINUS_ONE = toBig('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46');
@@ -18,12 +23,14 @@ describe('BLS', () => {
   before(async function () {
     await mcl.init();
     mcl.setDomain(DOMAIN_STR);
-    bls = await FACTORY_TEST_BLS.deploy();
+    const modexpSqrt = await FACTORY_MODEXP_SQRT.deploy();
+    const modexpInv = await FACTORY_MODEXP_INVERSE.deploy();
+    bls = await FACTORY_TEST_BLS.deploy(modexpInv.address, modexpSqrt.address);
   });
   it('fp is non residue', async function () {
-    let r = await bls.isNonResidueFP(MINUS_ONE);
+    let r = await bls._isNonResidueFP(MINUS_ONE);
     assert.isTrue(r);
-    r = await bls.isNonResidueFP(toBig('0x04'));
+    r = await bls._isNonResidueFP(toBig('0x04'));
     assert.isFalse(r);
     const residues = [];
     for (let i = 0; i < 5; i++) {
@@ -38,18 +45,18 @@ describe('BLS', () => {
       toBig('0x20fcdf224c9982c72a3e659884fdad7cb59b736d6d57d54799c57434b7869bb3'),
     ];
     for (let i = 0; i < residues.length; i++) {
-      r = await bls.isNonResidueFP(residues[i]);
+      r = await bls._isNonResidueFP(residues[i]);
       assert.isFalse(r);
     }
     for (let i = 0; i < nonResidues.length; i++) {
-      r = await bls.isNonResidueFP(nonResidues[i]);
+      r = await bls._isNonResidueFP(nonResidues[i]);
       assert.isTrue(r);
     }
   });
   it('fp2 is non residue', async function () {
-    let r = await bls.isNonResidueFP2([MINUS_ONE, ZERO]);
+    let r = await bls._isNonResidueFP2([MINUS_ONE, ZERO]);
     assert.isFalse(r);
-    r = await bls.isNonResidueFP2(NON_RESIDUE_2);
+    r = await bls._isNonResidueFP2(NON_RESIDUE_2);
     assert.isTrue(r);
     const residues = [
       [
@@ -96,41 +103,41 @@ describe('BLS', () => {
       ],
     ];
     for (let i = 0; i < residues.length; i++) {
-      r = await bls.isNonResidueFP2(residues[i]);
+      r = await bls._isNonResidueFP2(residues[i]);
       assert.isFalse(r);
     }
     for (let i = 0; i < nonResidues.length; i++) {
-      r = await bls.isNonResidueFP2(nonResidues[i]);
+      r = await bls._isNonResidueFP2(nonResidues[i]);
       assert.isTrue(r);
     }
   });
   it('is on curve g1', async function () {
     for (let i = 0; i < 20; i++) {
       const point = mcl.randG1();
-      let isOnCurve = await bls.isOnCurveG1(mcl.g1ToHex(point));
+      let isOnCurve = await bls._isOnCurveG1(mcl.g1ToHex(point));
       assert.isTrue(isOnCurve);
       const compressed = mcl.g1ToCompressed(point);
-      isOnCurve = await bls.isOnCurveG1Compressed(compressed);
+      isOnCurve = await bls._isOnCurveG1Compressed(compressed);
       assert.isTrue(isOnCurve);
     }
     for (let i = 0; i < 20; i++) {
       const point = [randBig(31), randBig(31)];
-      const isOnCurve = await bls.isOnCurveG1(point);
+      const isOnCurve = await bls._isOnCurveG1(point);
       assert.isFalse(isOnCurve);
     }
   });
   it('is on curve g2', async function () {
     for (let i = 0; i < 20; i++) {
       const point = mcl.randG2();
-      let isOnCurve = await bls.isOnCurveG2(mcl.g2ToHex(point));
+      let isOnCurve = await bls._isOnCurveG2(mcl.g2ToHex(point));
       assert.isTrue(isOnCurve);
       const compressed = mcl.g2ToCompressed(point);
-      isOnCurve = await bls.isOnCurveG2Compressed(compressed);
+      isOnCurve = await bls._isOnCurveG2Compressed(compressed);
       assert.isTrue(isOnCurve);
     }
     for (let i = 0; i < 20; i++) {
       const point = [randBig(31), randBig(31), randBig(31), randBig(31)];
-      const isOnCurve = await bls.isOnCurveG2(point);
+      const isOnCurve = await bls._isOnCurveG2(point);
       assert.isFalse(isOnCurve);
     }
   });
@@ -138,10 +145,10 @@ describe('BLS', () => {
     for (let i = 0; i < 20; i++) {
       const { pubkey } = mcl.newKeyPair();
       const compressed = mcl.compressPubkey(pubkey);
-      const isValid = await bls.isValidCompressedPublicKey(compressed);
+      const isValid = await bls._isValidCompressedPublicKey(compressed);
       assert.isTrue(isValid);
       const y = [mcl.g2ToBN(pubkey)[2], mcl.g2ToBN(pubkey)[3]];
-      const uncompressed = await bls.pubkeyToUncompresed(compressed, y);
+      const uncompressed = await bls._pubkeyToUncompresed(compressed, y);
       const _pubkey = mcl.newG2();
       _pubkey.setStr(
         `1 ${bigToHex(uncompressed[0])} ${bigToHex(uncompressed[1])} ${bigToHex(uncompressed[2])} ${bigToHex(
@@ -155,10 +162,10 @@ describe('BLS', () => {
     for (let i = 0; i < 20; i++) {
       const signature = mcl.randG1();
       const compressed = mcl.compressSignature(signature);
-      const isValid = await bls.isValidCompressedSignature(compressed);
+      const isValid = await bls._isValidCompressedSignature(compressed);
       assert.isTrue(isValid);
       const y = mcl.g1ToBN(signature)[1];
-      const uncompressed = await bls.signatureToUncompresed(compressed, y);
+      const uncompressed = await bls._signatureToUncompresed(compressed, y);
       const _signature = mcl.newG1();
       _signature.setStr(`1 ${bigToHex(uncompressed[0])} ${bigToHex(uncompressed[1])}`);
       assert.isTrue(signature.isEqual(_signature));
@@ -170,7 +177,7 @@ describe('BLS', () => {
       const data = randHex(12);
       const e = soliditySha256(['bytes'], [data])!;
       let expect = mcl.g1ToHex(mcl.mapToPoint(e));
-      let res = await bls.mapToPointTI(e);
+      let res = await bls._mapToPointTI(e);
       assert.equal(expect[0], bigToHex(res[0]));
       assert.equal(expect[1], bigToHex(res[1]));
     }
@@ -180,7 +187,7 @@ describe('BLS', () => {
     for (let i = 0; i < 100; i++) {
       const e = randFsHex();
       let expect = mcl.g1ToHex(mcl.mapToPoint(e));
-      let res = await bls.mapToPointFT(e);
+      let res = await bls._mapToPointFT(e);
       assert.equal(expect[0], bigToHex(res[0]), 'e ' + e);
       assert.equal(expect[1], bigToHex(res[1]), 'e ' + e);
     }
@@ -191,7 +198,7 @@ describe('BLS', () => {
       for (let i = 0; i < 100; i++) {
         const msg = randomBytes(i);
         const expected = expandMsg(DOMAIN, msg, 96);
-        const result = await bls.expandMsg(DOMAIN, msg);
+        const result = await bls._expandMsg(DOMAIN, msg);
         assert.equal(hexlify(expected), result);
       }
     }
@@ -202,7 +209,7 @@ describe('BLS', () => {
       for (let i = 0; i < 100; i++) {
         const msg = randomBytes(i);
         const expected = hashToField(DOMAIN, msg, 2);
-        const result = await bls.hashToField(DOMAIN, msg);
+        const result = await bls._hashToField(DOMAIN, msg);
         assert.equal(hexlify(expected[0]), hexlify(result[0]));
         assert.equal(hexlify(expected[1]), hexlify(result[1]));
       }
@@ -214,7 +221,7 @@ describe('BLS', () => {
       for (let i = 0; i < 100; i++) {
         const msg = randomBytes(i);
         const expected = mcl.g1ToHex(mcl.hashToPoint(hexlify(msg)));
-        const result = await bls.hashToPoint(DOMAIN, msg);
+        const result = await bls._hashToPoint(DOMAIN, msg);
         assert.equal(expected[0], bigToHex(result[0]));
         assert.equal(expected[1], bigToHex(result[1]));
       }
@@ -238,7 +245,7 @@ describe('BLS', () => {
     let messages_ser = messages.map((p) => mcl.g1ToBN(p));
     let pubkeys_ser = pubkeys.map((p) => mcl.g2ToBN(p));
     let sig_ser = mcl.g1ToBN(aggSignature);
-    let res = await bls.verifyMultiple(sig_ser, pubkeys_ser, messages_ser);
+    let res = await bls._verifyMultiple(sig_ser, pubkeys_ser, messages_ser);
     assert.isTrue(res);
   });
   it('verify single signature', async function () {
@@ -250,7 +257,7 @@ describe('BLS', () => {
     let message_ser = mcl.g1ToBN(M);
     let pubkey_ser = mcl.g2ToBN(pubkey);
     let sig_ser = mcl.g1ToBN(signature);
-    let res = await bls.verifySingle(sig_ser, pubkey_ser, message_ser);
+    let res = await bls._verifySingle(sig_ser, pubkey_ser, message_ser);
     assert.isTrue(res);
   });
 });

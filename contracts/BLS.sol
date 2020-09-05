@@ -1,6 +1,8 @@
 pragma solidity ^0.6.10;
 
-library BLS {
+import { modexp } from "./modexp.sol";
+
+contract BLS {
   // Field order
   uint256 constant N = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
@@ -21,6 +23,9 @@ library BLS {
 
   uint256 constant T24 = 0x1000000000000000000000000000000000000000000000000;
   uint256 constant MASK24 = 0xffffffffffffffffffffffffffffffffffffffffffffffff;
+
+  modexp modexp_3064_fd54;
+  modexp modexp_c191_3f52;
 
   function verifySingle(
     uint256[2] memory signature,
@@ -382,6 +387,11 @@ library BLS {
     }
     require(callSuccess, "BLS: isNonResidueFP2 modexp call failed");
     return !isNonResidue;
+  }
+
+  function sqrtFaster(uint256 xx) internal view returns (uint256 x, bool hasRoot) {
+    x = modexp_c191_3f52.run(xx);
+    hasRoot = mulmod(x, x, N) == xx;
   }
 
   function sqrt(uint256 xx) internal view returns (uint256 x, bool hasRoot) {

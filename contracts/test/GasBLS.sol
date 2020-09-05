@@ -1,85 +1,91 @@
 pragma solidity ^0.6.10;
 
 import { BLS } from "../BLS.sol";
+import { modexp } from "../modexp.sol";
 
-contract GasBLS {
-  function verifyMultipleGasCost(
+contract GasBLS is BLS {
+  constructor(modexp _modexp_3064_fd54, modexp _modexp_c191_3f52) public {
+    modexp_3064_fd54 = _modexp_3064_fd54;
+    modexp_c191_3f52 = _modexp_c191_3f52;
+  }
+
+  function _verifyMultipleGasCost(
     uint256[2] calldata signature,
     uint256[4][] calldata pubkeys,
     uint256[2][] calldata messages
   ) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    require(BLS.verifyMultiple(signature, pubkeys, messages), "BLSTest: expect succesful verification");
+    require(verifyMultiple(signature, pubkeys, messages), "BLSTest: expect succesful verification");
     return operationGasCost - gasleft();
   }
 
-  function verifySingleGasCost(
+  function _verifySingleGasCost(
     uint256[2] calldata signature,
     uint256[4] calldata pubkey,
     uint256[2] calldata message
   ) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    require(BLS.verifySingle(signature, pubkey, message), "BLSTest: expect succesful verification");
+    require(verifySingle(signature, pubkey, message), "BLSTest: expect succesful verification");
     return operationGasCost - gasleft();
   }
 
-  function mapToPointTIGasCost(bytes32 e) external returns (uint256 operationGasCost) {
+  function _mapToPointTIGasCost(bytes32 e) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.mapToPointTI(e);
+    mapToPointTI(e);
     return operationGasCost - gasleft();
   }
 
-  function mapToPointFTGasCost(uint256 e) external returns (uint256 operationGasCost) {
+  function _mapToPointFTGasCost(uint256 e) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.mapToPointFT(e);
+    mapToPointFT(e);
     return operationGasCost - gasleft();
   }
 
-  function hashToPointGasCost(bytes memory domain, bytes memory message) external returns (uint256 operationGasCost) {
+  function _hashToPointGasCost(bytes memory domain, bytes memory message) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.hashToPoint(domain, message);
+    hashToPoint(domain, message);
     return operationGasCost - gasleft();
   }
 
-  function hashToFieldGasCost(bytes memory domain, bytes memory message) external returns (uint256 operationGasCost) {
+  function _hashToFieldGasCost(bytes memory domain, bytes memory message) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.hashToField(domain, message);
+    hashToField(domain, message);
     return operationGasCost - gasleft();
   }
 
-  function isOnCurveG1CompressedGasCost(uint256 point) external returns (uint256 operationGasCost) {
+  function _isOnCurveG1CompressedGasCost(uint256 point) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.isOnCurveG1(point);
+    isOnCurveG1(point);
     return operationGasCost - gasleft();
   }
 
-  function isOnCurveG1GasCost(uint256[2] calldata point) external returns (uint256 operationGasCost) {
+  function _isOnCurveG1GasCost(uint256[2] calldata point) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.isOnCurveG1(point);
+    isOnCurveG1(point);
     return operationGasCost - gasleft();
   }
 
-  function isOnCurveG2CompressedGasCost(uint256[2] calldata point) external returns (uint256 operationGasCost) {
+  function _isOnCurveG2CompressedGasCost(uint256[2] calldata point) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.isOnCurveG2(point);
+    isOnCurveG2(point);
     return operationGasCost - gasleft();
   }
 
-  function isOnCurveG2GasCost(uint256[4] calldata point) external returns (uint256 operationGasCost) {
+  function _isOnCurveG2GasCost(uint256[4] calldata point) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.isOnCurveG2(point);
+    isOnCurveG2(point);
     return operationGasCost - gasleft();
   }
 
-  function isNonResidueFPGasCost(uint256 e) external returns (uint256 operationGasCost) {
+  function _isNonResidueFPGasCost(uint256 e) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.isNonResidueFP(e);
+    isNonResidueFP(e);
     return operationGasCost - gasleft();
   }
 
-  function isNonResidueFP2GasCost(uint256[2] calldata e) external returns (uint256 operationGasCost) {
+  function _isNonResidueFP2GasCost(uint256[2] calldata e) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
-    BLS.isNonResidueFP2(e);
+    isNonResidueFP2(e);
     return operationGasCost - gasleft();
   }
 }
