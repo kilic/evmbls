@@ -115,7 +115,7 @@ contract BLS {
       y = mulmod(x, x, N);
       y = mulmod(y, x, N);
       y = addmod(y, 3, N);
-      (y, found) = sqrt(y);
+      (y, found) = sqrtFaster(y);
       if (found) {
         p[0] = x;
         p[1] = y;
@@ -145,7 +145,7 @@ contract BLS {
     a1 = mulmod(a1, x, N);
     a1 = addmod(a1, 3, N);
     bool found;
-    (a1, found) = sqrt(a1);
+    (a1, found) = sqrtFaster(a1);
     if (found) {
       if (decision) {
         a1 = N - a1;
@@ -159,7 +159,7 @@ contract BLS {
     a1 = mulmod(x, x, N);
     a1 = mulmod(a1, x, N);
     a1 = addmod(a1, 3, N);
-    (a1, found) = sqrt(a1);
+    (a1, found) = sqrtFaster(a1);
     if (found) {
       if (decision) {
         a1 = N - a1;
@@ -177,7 +177,7 @@ contract BLS {
     a1 = mulmod(x, x, N);
     a1 = mulmod(a1, x, N);
     a1 = addmod(a1, 3, N);
-    (a1, found) = sqrt(a1);
+    (a1, found) = sqrtFaster(a1);
     require(found, "BLS: bad ft mapping implementation");
     if (decision) {
       a1 = N - a1;
