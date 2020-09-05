@@ -9,6 +9,18 @@ contract GasBLS is BLS {
     modexp_c191_3f52 = _modexp_c191_3f52;
   }
 
+  function _sqrt(uint256 xx) external view returns (uint256 operationGasCost) {
+    operationGasCost = gasleft();
+    sqrt(xx);
+    return operationGasCost - gasleft();
+  }
+
+  function _sqrtFaster(uint256 xx) external view returns (uint256 operationGasCost) {
+    operationGasCost = gasleft();
+    sqrtFaster(xx);
+    return operationGasCost - gasleft();
+  }
+
   function _verifyMultipleGasCost(
     uint256[2] calldata signature,
     uint256[4][] calldata pubkeys,

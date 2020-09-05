@@ -1,5 +1,5 @@
 import * as mcl from './mcl';
-import { toBig, bigToHex, ZERO, randBig, randHex, randFs, randFsHex } from './utils';
+import { toBig, bigToHex, ZERO, randBig, randHex, randFs, randFsHex, sqrt } from './utils';
 import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { wallet } from './provider';
 import { TestBls } from '../types/ethers-contracts/TestBls';
@@ -26,6 +26,18 @@ describe('BLS', () => {
     const modexpSqrt = await FACTORY_MODEXP_SQRT.deploy();
     const modexpInv = await FACTORY_MODEXP_INVERSE.deploy();
     bls = await FACTORY_TEST_BLS.deploy(modexpInv.address, modexpSqrt.address);
+  });
+  it('sqrt', async function () {
+    for (let i = 0; i < 100; i++) {
+      const a = randFs();
+      const r0 = sqrt(a);
+      const r1 = await bls._sqrt(a);
+      assert.isTrue(r0.n.eq(r1[0]));
+      assert.equal(r0.found, r1[1]);
+      const r2 = await bls._sqrtFaster(a);
+      assert.isTrue(r0.n.eq(r2[0]));
+      assert.equal(r0.found, r2[1]);
+    }
   });
   it('fp is non residue', async function () {
     let r = await bls._isNonResidueFP(MINUS_ONE);

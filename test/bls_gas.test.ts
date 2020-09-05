@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import { GasBlsFactory } from '../types/ethers-contracts/GasBlsFactory';
 import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { TestBls } from '../types/ethers-contracts/TestBls';
-import { bigToHex, randHex, randFsHex } from './utils';
+import { bigToHex, randHex, randFsHex, randFs } from './utils';
 import { ContractFactory } from 'ethers';
 const FACTORY_GAS_BLS = new GasBlsFactory(wallet);
 const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
@@ -26,6 +26,13 @@ describe('BLS', () => {
     const modexpInv = await FACTORY_MODEXP_INVERSE.deploy();
     bls = await FACTORY_GAS_BLS.deploy(modexpInv.address, modexpSqrt.address);
     _bls = await FACTORY_TEST_BLS.deploy(modexpInv.address, modexpSqrt.address);
+  });
+  it('sqrt', async function () {
+    const a = randFs();
+    const cost = await bls.callStatic._sqrt(a);
+    console.log(`sqrt cost: ${cost.toNumber()}`);
+    const costMagic = await bls.callStatic._sqrtFaster(a);
+    console.log(`magic sqrt cost: ${costMagic.toNumber()}`);
   });
   it('verify signature', async function () {
     const n = 100;
