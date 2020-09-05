@@ -1,12 +1,8 @@
-import { BigNumber, ethers } from 'ethers';
-import { hexZeroPad, randomBytes, hexlify } from 'ethers/lib/utils';
+import { ethers } from 'ethers';
+import { toBig, FIELD_ORDER, bigToHex, randHex } from './utils';
 import { hashToField } from './hash_to_field';
 
 const mcl = require('mcl-wasm');
-
-export function toBig(n: any) {
-  return BigNumber.from(n);
-}
 
 export type mclG2 = any;
 export type mclG1 = any;
@@ -17,9 +13,6 @@ export type SecretKey = mclFR;
 
 export const MAPPING_MODE_TI = 'TI';
 export const MAPPING_MODE_FT = 'FT';
-
-export const FIELD_ORDER = BigNumber.from('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47');
-export const ZERO = BigNumber.from('0');
 
 let DOMAIN: Uint8Array;
 
@@ -67,18 +60,6 @@ export function mapToPoint(eHex: string) {
   let e1 = new mcl.Fp();
   e1.setStr(e0.mod(FIELD_ORDER).toString());
   return e1.mapToG1();
-}
-
-export function randHex(n: number) {
-  return hexlify(randomBytes(n));
-}
-
-export function randBig(n: number) {
-  return toBig(randomBytes(n));
-}
-
-export function bigToHex(n: BigNumber) {
-  return hexZeroPad(n.toHexString(), 32);
 }
 
 export function mclToHex(p: mclFP, prefix: boolean = true) {
@@ -216,16 +197,6 @@ export function randFr() {
   let fr = new mcl.Fr();
   fr.setHashOf(r);
   return fr;
-}
-
-export function randFs() {
-  const r = randBig(32);
-  return r.mod(FIELD_ORDER);
-}
-
-export function randFsHex() {
-  const r = randBig(32);
-  return bigToHex(r.mod(FIELD_ORDER));
 }
 
 export function randG1() {

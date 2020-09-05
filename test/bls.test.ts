@@ -1,5 +1,5 @@
 import * as mcl from './mcl';
-import { toBig, bigToHex, ZERO, randBig, randHex, randFsHex } from './mcl';
+import { toBig, bigToHex, ZERO, randBig, randHex, randFs, randFsHex } from './utils';
 import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { wallet } from './provider';
 import { TestBls } from '../types/ethers-contracts/TestBls';
@@ -27,7 +27,7 @@ describe('BLS', () => {
     assert.isFalse(r);
     const residues = [];
     for (let i = 0; i < 5; i++) {
-      const a = mcl.randFs();
+      const a = randFs();
       residues.push(a.mul(a).mod(FIELD_ORDER));
     }
     const nonResidues = [
@@ -178,7 +178,7 @@ describe('BLS', () => {
   it('map to point, ft', async function () {
     mcl.setMappingMode(mcl.MAPPING_MODE_FT);
     for (let i = 0; i < 100; i++) {
-      const e = mcl.randFsHex();
+      const e = randFsHex();
       let expect = mcl.g1ToHex(mcl.mapToPoint(e));
       let res = await bls.mapToPointFT(e);
       assert.equal(expect[0], bigToHex(res[0]), 'e ' + e);
