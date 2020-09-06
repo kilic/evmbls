@@ -24,8 +24,8 @@ describe('BLS', () => {
     mcl.setDomain(DOMAIN_STR);
     const modexpSqrt = await FACTORY_MODEXP_SQRT.deploy();
     const modexpInv = await FACTORY_MODEXP_INVERSE.deploy();
-    bls = await FACTORY_GAS_BLS.deploy(modexpInv.address, modexpSqrt.address);
-    _bls = await FACTORY_TEST_BLS.deploy(modexpInv.address, modexpSqrt.address);
+    bls = await FACTORY_GAS_BLS.deploy();
+    _bls = await FACTORY_TEST_BLS.deploy();
   });
   it('sqrt', async function () {
     const a = randFs();

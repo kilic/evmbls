@@ -1,6 +1,6 @@
 pragma solidity ^0.6.10;
 
-import { modexp } from "./modexp.sol";
+import { modexp_3064_fd54, modexp_c191_3f52 } from "./modexp.sol";
 
 contract BLS {
   // Field order
@@ -24,8 +24,6 @@ contract BLS {
   uint256 constant T24 = 0x1000000000000000000000000000000000000000000000000;
   uint256 constant MASK24 = 0xffffffffffffffffffffffffffffffffffffffffffffffff;
 
-  modexp modexp_3064_fd54;
-  modexp modexp_c191_3f52;
 
   function verifySingle(
     uint256[2] memory signature,

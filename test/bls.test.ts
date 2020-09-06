@@ -23,9 +23,7 @@ describe('BLS', () => {
   before(async function () {
     await mcl.init();
     mcl.setDomain(DOMAIN_STR);
-    const modexpSqrt = await FACTORY_MODEXP_SQRT.deploy();
-    const modexpInv = await FACTORY_MODEXP_INVERSE.deploy();
-    bls = await FACTORY_TEST_BLS.deploy(modexpInv.address, modexpSqrt.address);
+    bls = await FACTORY_TEST_BLS.deploy();
   });
   it('sqrt', async function () {
     for (let i = 0; i < 100; i++) {
