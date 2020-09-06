@@ -1,13 +1,10 @@
 pragma solidity ^0.6.10;
 
 import { BLS } from "../BLS.sol";
-import { modexp } from "../modexp.sol";
+import { modexp_3064_fd54 , modexp_c191_3f52} from "../modexp.sol";
 
 contract TestBLS is BLS {
-  constructor(modexp _modexp_3064_fd54, modexp _modexp_c191_3f52) public {
-    modexp_3064_fd54 = _modexp_3064_fd54;
-    modexp_c191_3f52 = _modexp_c191_3f52;
-  }
+
 
   function _sqrt(uint256 xx) external view returns (uint256, bool) {
     return sqrt(xx);

@@ -4,3 +4,4 @@ build
 types
 *.log
 cache
+tests
