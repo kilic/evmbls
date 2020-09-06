@@ -7,10 +7,6 @@ import { assert } from 'chai';
 import { soliditySha256, hexlify, randomBytes } from 'ethers/lib/utils';
 import { expandMsg, hashToField, FIELD_ORDER } from './hash_to_field';
 import { ContractFactory } from 'ethers';
-const modexp_sqrt = require('../modexp/modexp_c191_3f52.json');
-const modexp_inverse = require('../modexp/modexp_3064_fd54.json');
-const FACTORY_MODEXP_SQRT = new ContractFactory(modexp_sqrt.abi, modexp_sqrt.bytecode, wallet);
-const FACTORY_MODEXP_INVERSE = new ContractFactory(modexp_inverse.abi, modexp_inverse.bytecode, wallet);
 const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
 
 const MINUS_ONE = toBig('0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46');

@@ -6,13 +6,8 @@ import { GasBlsFactory } from '../types/ethers-contracts/GasBlsFactory';
 import { TestBlsFactory } from '../types/ethers-contracts/TestBlsFactory';
 import { TestBls } from '../types/ethers-contracts/TestBls';
 import { bigToHex, randHex, randFsHex, randFs } from './utils';
-import { ContractFactory } from 'ethers';
 const FACTORY_GAS_BLS = new GasBlsFactory(wallet);
 const FACTORY_TEST_BLS = new TestBlsFactory(wallet);
-const modexp_sqrt = require('../modexp/modexp_c191_3f52.json');
-const modexp_inverse = require('../modexp/modexp_3064_fd54.json');
-const FACTORY_MODEXP_SQRT = new ContractFactory(modexp_sqrt.abi, modexp_sqrt.bytecode, wallet);
-const FACTORY_MODEXP_INVERSE = new ContractFactory(modexp_inverse.abi, modexp_inverse.bytecode, wallet);
 const DOMAIN_STR = 'gas-bench-evmbls';
 const DOMAIN = Uint8Array.from(Buffer.from(DOMAIN_STR, 'utf8'));
 
@@ -22,8 +17,6 @@ describe('BLS', () => {
   before(async function () {
     await mcl.init();
     mcl.setDomain(DOMAIN_STR);
-    const modexpSqrt = await FACTORY_MODEXP_SQRT.deploy();
-    const modexpInv = await FACTORY_MODEXP_INVERSE.deploy();
     bls = await FACTORY_GAS_BLS.deploy();
     _bls = await FACTORY_TEST_BLS.deploy();
   });
