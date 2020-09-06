@@ -1,7 +1,7 @@
 from brownie import accounts
 from ecc.utils import sqrt, rand_fq, rand_fq2, rand_r
 from ecc.utils import rand_g1, is_valid_g1_point, is_valid_g2_point, compress_g1, compress_g2, rand_g2
-from ecc.mapping import map_to_g1_ti, map_to_g1_ft
+from ecc.mapping import map_to_g1_ti, map_to_g1_ft, map_to_g1_ti_and_helps, map_to_g1_ft_and_helps
 from py_ecc.optimized_bn128 import field_modulus, FQ, FQ2, normalize, G1, neg, b as BN128_B, b2 as BN128_B2
 import pytest
 
@@ -134,19 +134,37 @@ def test_is_on_curve_g2(bls_tester):  # pylint: disable=redefined-outer-name
     assert not bls_tester.isOnCurveG2Compressed(compressed)
 
 
-def test_map_to_point_ti(bls_tester):
+def test_map_to_point_ti(bls_tester):  # pylint: disable=redefined-outer-name
   for _ in range(FUZZ):
     r = rand_r() % field_modulus
     expected = map_to_g1_ti(r)
-    result = bls_tester.mapToPointTI(to_32(r))
+    result = bls_tester.mapToPointTI(r)
     assert expected[0] == result[0]
     assert expected[1] == result[1]
 
 
-def test_map_to_point_ft(bls_tester):
-  for i in range(1000):
+def test_map_to_point_ti_helped(bls_tester):  # pylint: disable=redefined-outer-name
+  for _ in range(FUZZ):
+    r = rand_r() % field_modulus
+    expected, helps = map_to_g1_ti_and_helps(r)
+    result = bls_tester.mapToPointTIHelped(r, helps)
+    assert expected[0] == result[0]
+    assert expected[1] == result[1]
+
+
+def test_map_to_point_ft(bls_tester):  # pylint: disable=redefined-outer-name
+  for i in range(FUZZ):
     r = rand_r() % field_modulus
     expected = map_to_g1_ft(r)
     result = bls_tester.mapToPointFT(to_32(r))
+    assert expected[0] == result[0]
+    assert expected[1] == result[1]
+
+
+def test_map_to_point_ft_helped(bls_tester):  # pylint: disable=redefined-outer-name
+  for i in range(FUZZ):
+    r = rand_r() % field_modulus
+    expected, helps = map_to_g1_ft_and_helps(r)
+    result = bls_tester.mapToPointFTHelped(r, helps)
     assert expected[0] == result[0]
     assert expected[1] == result[1]

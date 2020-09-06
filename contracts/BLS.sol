@@ -77,8 +77,9 @@ library BLS {
     return out[0] != 0;
   }
 
-  function mapToPointTI(bytes32 _x) internal view returns (uint256[2] memory p) {
-    uint256 x = uint256(_x) % N;
+  function mapToPointTI(uint256 _x) internal view returns (uint256[2] memory p) {
+    require(_x < N, "BLS: invalid field element");
+    uint256 x = _x;
     uint256 y;
     bool found = false;
     while (true) {
@@ -95,9 +96,36 @@ library BLS {
     }
   }
 
-  function mapToPointFT(bytes32 _in) internal view returns (uint256[2] memory p) {
-    uint256 x = uint256(_in) % N;
+  function mapToPointTIHelped(uint256 _x, uint256[] memory H) internal view returns (uint256[2] memory p) {
+    require(_x < N, "BLS: invalid field element");
+    uint256 x = _x;
+    uint256 y2;
+    uint256 y;
+    require(H.length > 0, "BLS: need helper");
+    for (uint256 i = 0; i < H.length - 1; i++) {
+      y2 = mulmod(x, x, N);
+      y2 = mulmod(y2, x, N);
+      y2 = addmod(y2, 3, N);
+      y = H[i];
+      require(y < N, "BLS: invalid helper element, larger than modulus; try");
+      require(mulmod(y, y, N) == N - y2, "BLS: invalid helper element; try");
+      x = addmod(x, 1, N);
+    }
+    y2 = mulmod(x, x, N);
+    y2 = mulmod(y2, x, N);
+    y2 = addmod(y2, 3, N);
+    y = H[H.length - 1];
+    require(y < N, "BLS: invalid helper element, larger than modulus; hit");
+    require(mulmod(y, y, N) == y2, "BLS: invalid helper element; hit");
+    p[0] = x;
+    p[1] = y;
+  }
+
+  function mapToPointFT(uint256 _x) internal view returns (uint256[2] memory p) {
+    require(_x < N, "BLS: invalid field element");
+    uint256 x = _x;
     bool decision = isNonResidueFQ(x);
+
     uint256 a0 = mulmod(x, x, N);
     a0 = addmod(a0, 4, N);
     uint256 a1 = mulmod(x, z0, N);
@@ -152,6 +180,90 @@ library BLS {
       a1 = N - a1;
     }
     return [x, a1];
+  }
+
+  function mapToPointFTHelped(uint256 _x, uint256[5] memory H) internal pure returns (uint256[2] memory p) {
+    require(_x < N, "BLS: invalid field element");
+    uint256 x = _x;
+
+    bool decision;
+    uint256 h = H[0];
+    uint256 d = mulmod(h, h, N);
+    if (d == x) {
+      decision = false;
+    } else if (d == N - x) {
+      decision = true;
+    } else {
+      revert("BLS: invalid helper element, 1");
+    }
+
+    uint256 a0 = mulmod(x, x, N);
+    a0 = addmod(a0, 4, N);
+    uint256 a1 = mulmod(x, z0, N);
+    // a2 = inverse(a1 * a0)
+    uint256 a2 = H[1];
+    require(mulmod(a2, mulmod(a1, a0, N), N) == 1, "BLS: invalid helper element, 1");
+
+    a1 = mulmod(a1, a1, N);
+    a1 = mulmod(a1, a2, N);
+
+    // x1
+    a1 = mulmod(x, a1, N);
+    x = addmod(z1, N - a1, N);
+    // check curve
+    a1 = mulmod(x, x, N);
+    a1 = mulmod(a1, x, N);
+    a1 = addmod(a1, 3, N);
+
+    h = H[2];
+    d = mulmod(h, h, N);
+    // if h^2 == a1
+    if (d == a1) {
+      if (decision) {
+        h = N - h;
+      }
+      return [x, h];
+    }
+    // else h^2 ?= -a1
+    require(d == N - a1, "BLS: invalid helper element, 2");
+
+    // x2
+    x = N - addmod(x, 1, N);
+    // check curve
+    a1 = mulmod(x, x, N);
+    a1 = mulmod(a1, x, N);
+    a1 = addmod(a1, 3, N);
+
+    h = H[3];
+    d = mulmod(h, h, N);
+    // if h^2 == a1
+    if (d == a1) {
+      if (decision) {
+        h = N - h;
+      }
+      return [x, h];
+    }
+    // else h^2 ?= -a1
+    require(d == N - a1, "BLS: invalid helper element, 3");
+
+    // x3
+    x = mulmod(a0, a0, N);
+    x = mulmod(x, x, N);
+    x = mulmod(x, a2, N);
+    x = mulmod(x, a2, N);
+    x = addmod(x, 1, N);
+    // must be on curve
+    a1 = mulmod(x, x, N);
+    a1 = mulmod(a1, x, N);
+    a1 = addmod(a1, 3, N);
+
+    h = H[4];
+    // h^2 ?= a1
+    require(mulmod(h, h, N) == a1, "BLS: invalid helper element, 4");
+    if (decision) {
+      h = N - h;
+    }
+    return [x, h];
   }
 
   function isValidPublicKey(uint256[4] memory publicKey) internal pure returns (bool) {

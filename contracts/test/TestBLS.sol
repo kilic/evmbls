@@ -19,12 +19,20 @@ contract TestBLS {
     return BLS.verifySingle(signature, pubkey, message);
   }
 
-  function mapToPointTI(bytes32 e) external view returns (uint256[2] memory p) {
-    return BLS.mapToPointTI(e);
+  function mapToPointTI(uint256 _x) external view returns (uint256[2] memory p) {
+    return BLS.mapToPointTI(_x);
   }
 
-  function mapToPointFT(bytes32 e) external view returns (uint256[2] memory p) {
+  function mapToPointTIHelped(uint256 _x, uint256[] calldata helpers) external view returns (uint256[2] memory p) {
+    return BLS.mapToPointTIHelped(_x, helpers);
+  }
+
+  function mapToPointFT(uint256 e) external view returns (uint256[2] memory p) {
     return BLS.mapToPointFT(e);
+  }
+
+  function mapToPointFTHelped(uint256 _x, uint256[5] calldata H) external view returns (uint256[2] memory p) {
+    return BLS.mapToPointFTHelped(_x, H);
   }
 
   function isOnCurveG1Compressed(uint256 point) external view returns (bool) {

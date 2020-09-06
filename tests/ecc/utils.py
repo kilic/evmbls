@@ -103,3 +103,5 @@ def sqrt(a):
     elif isinstance(a, FQ2):
         x = _try_sqrt_in_fp2(a)
     return x if x * x == a else None
+
+
