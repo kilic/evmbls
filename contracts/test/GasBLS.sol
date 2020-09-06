@@ -41,7 +41,7 @@ contract GasBLS {
     return operationGasCost - gasleft();
   }
 
-  function mapToPointFTHelped(uint256 _x, uint256[5] memory helpers) external returns (uint256 operationGasCost) {
+  function mapToPointFTHelpedGasCost(uint256 _x, uint256[5] memory helpers) external returns (uint256 operationGasCost) {
     operationGasCost = gasleft();
     BLS.mapToPointFTHelped(_x, helpers);
     return operationGasCost - gasleft();
